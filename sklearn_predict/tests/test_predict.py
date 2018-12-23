@@ -9,14 +9,14 @@ from sklearn.linear_model import SGDClassifier
 from sqlalchemy import create_engine
 import pandas as pd
 
-from sklearn_predict import linearsvm_sql
+from sklearn_predict.linear_model import LinearSVMSQL
 
 @pytest.fixture
 def data():
     return load_iris(return_X_y=True)
 
 def test_sgd_estimator_iris(data):
-    est = SGDClassifier(max_iter = 1000, tol=1e-3)
+    est = SGDClassifier(max_iter = 1000, tol=1e-3, random_state=10)
     est.fit(*data)
     assert hasattr(est, 'coef_')
 
@@ -31,7 +31,7 @@ def test_sgd_estimator_iris(data):
                 columns= iris['feature_names'] + ['target'])
     data.to_sql('iris', con=engine)
 
-    queries = linearsvm_sql(est, iris['feature_names'])
+    queries = LinearSVMSQL(est, iris['feature_names']).export()
     assert len(queries) == 3
 
     select_query = ','.join(["{} as p{}".format(x, idx) for idx, x in enumerate(queries)])
@@ -40,9 +40,9 @@ def test_sgd_estimator_iris(data):
     from (
     SELECT {} from iris)""".format(select_query)
     data_out = pd.read_sql(sql_query, engine)
-    print(data_out.columns)
-    print(y_pred)
-    print(data_out)
+    #print(data_out.columns)
+    #print(y_pred)
+    #print(data_out)
     data_out['pred0'] = (y_pred == 0)
     data_out['pred1'] = (y_pred == 1)
     data_out['pred2'] = (y_pred == 2)
@@ -68,14 +68,14 @@ def test_sgd_estimator_mandelon():
                 columns= feature_names)
     data.to_sql('iris', con=engine)
 
-    queries = linearsvm_sql(est, feature_names)
+    queries = LinearSVMSQL(est, feature_names).export()
     assert len(queries) == 1
 
     select_query = ','.join(["{} as p{}".format(x, idx) for idx, x in enumerate(queries)])
     sql_query = "SELECT {} from iris".format(select_query)
     data_out = pd.read_sql(sql_query, engine)
-    print(data_out.columns)
-    print(y_pred)
-    print(data_out)
+    #print(data_out.columns)
+    #print(y_pred)
+    #print(data_out)
     data_out['pred0'] = (y_pred == 1)
     assert_array_equal(data_out['pred0'], data_out['p0']>0)

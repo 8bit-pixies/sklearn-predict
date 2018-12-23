@@ -45,3 +45,9 @@ The reasoning is that many more complex systems which we may aim to embed will l
 only support a small subset of functions. We believe that these systems too should
 be enabled to deployed more complex machine learning workflows in spite of such limitations
 
+Testing
+=======
+
+.. code:: bash
+
+    pytest --capture=sys
