@@ -72,14 +72,33 @@ class SkopeRulesSQL:
         binary_template = "CASE WHEN {} THEN 1 ELSE 0"
         return [fix_names(binary_template.format(x[0])) for x in self.model.rules_]
 
-def skrules_sql(model, feature_names):
 
-    def fix_names(cond):
-        import re
-        for nm in feature_names:
-            find_cond = " ({}) ".format(nm)
-            cond = re.sub(find_cond, r' `\g<1>` ', cond)
-        return cond
+class CountVectorizerSQL:
+    def __init__(self, model):
+        self.model = model
+        if not self.model.binary:
+            warnings.warn("CountVectorizerSQL only formally supports `binary`=True")
+    
+    def text_cleaner(self, text_column="text"):
+        # TODO: what options should be encoded?
+        word_boundaries = list("!@#$%^&*()_+-={}[];'\":?><,./~`")
+        select_col = "LOWER(`{}`)".format(text_column)
+        for punc in word_boundaries:
+            select_col += "REPLACE({}, {}, '.')".format(select_col, punc)
+        return select_col
 
-    binary_template = "CASE WHEN {} THEN 1 ELSE 0"
-    return [fix_names(binary_template.format(x[0])) for x in model.rules_]
+    def export(self, text_column="text", prefix=""):
+        """
+        Model only works for binary, instead of count vectorizer
+        """
+        feature_names = self.model.get_feature_names()
+        feature_query = []
+        for name in feature_names:
+            if prefix != "":
+                prefix_name = "{}_{}".format(prefix, name)
+            else:
+                prefix_name = name
+            query = "CASE WHEN INSTR({text}, '.{name}.') > 0 THEN 1 ELSE 0 END AS {prefix_name}".format(text=text_column, name=name, prefix_name=prefix_name)
+            feature_query.append(query)
+        return feature_query
+
