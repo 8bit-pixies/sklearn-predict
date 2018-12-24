@@ -79,15 +79,18 @@ class CountVectorizerSQL:
         if not self.model.binary:
             warnings.warn("CountVectorizerSQL only formally supports `binary`=True")
     
-    def text_cleaner(self, text_column="text"):
+    def text_cleaner(self, text_column="text", config={'concat_func': False}):
         # TODO: what options should be encoded?
-        word_boundaries = list("!@#$%^&*()_+-={}[];'\":?><,./~`")
-        select_col = "LOWER(`{}`)".format(text_column)
+        word_boundaries = list("!_-;?,(){}=+ ")
+        if config.get('concat_func', True):
+            select_col = "CONCAT(CONCAT('.', LOWER(`{}`)), '.')".format(text_column)
+        else:
+            select_col = "('.' || LOWER(`{}`) || '.')".format(text_column)
         for punc in word_boundaries:
-            select_col += "REPLACE({}, {}, '.')".format(select_col, punc)
+            select_col = "REPLACE(" + select_col + ", '{}', '.')".format(punc)
         return select_col
 
-    def export(self, text_column="text", prefix=""):
+    def export(self, text_column="text", prefix="", mode="sqlite"):
         """
         Model only works for binary, instead of count vectorizer
         """
@@ -98,7 +101,11 @@ class CountVectorizerSQL:
                 prefix_name = "{}_{}".format(prefix, name)
             else:
                 prefix_name = name
-            query = "CASE WHEN INSTR({text}, '.{name}.') > 0 THEN 1 ELSE 0 END AS {prefix_name}".format(text=text_column, name=name, prefix_name=prefix_name)
+            query = "CASE WHEN {text} LIKE '%.{name}.%' THEN 1 ELSE 0 END AS `{prefix_name}`".format(text=text_column, name=name, prefix_name=prefix_name)
+            #if mode != "ksql":
+            #    query = "CASE WHEN INSTR({text}, '.{name}.') > 0 THEN 1 ELSE 0 END AS {prefix_name}".format(text=text_column, name=name, prefix_name=prefix_name)
+            #else:
+            #    query = "CASE WHEN {text} LIKE '%.{name}.%' THEN 1 ELSE 0 END AS {prefix_name}".format(text=text_column, name=name, prefix_name=prefix_name)
             feature_query.append(query)
         return feature_query
 
