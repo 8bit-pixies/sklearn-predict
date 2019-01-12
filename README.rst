@@ -51,3 +51,4 @@ Testing
 .. code:: bash
 
     pytest --capture=sys
+    pytest --cov=sklearn_predict

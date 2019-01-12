@@ -8,6 +8,7 @@ TODO: logistic regression via softmax (logistic function) and normalising...
 """
 
 import numpy as np
+from copy import deepcopy
 import warnings
 
 class LinearSVMSQL:
@@ -81,3 +82,82 @@ class LinearSVMSQL:
             case_query = get_max(pred_names, pred_target, pred_name)
             sql_query = "SELECT\n\t*,\n\t{}\nfrom {}".format(case_query, sub_query)
             return sql_query
+
+
+class GraftingLinearModel:
+    def __init__(self, model):
+        # TODO: add checks for supported model types
+        self.model = model
+    
+    def fit(self, X, y):
+        self.model.fit(X, y)
+        return self
+    
+    def score(self, X, y):
+        return self.model.score(X, y)
+    
+    def predict(self, X):
+        return self.model.predict(X)
+    
+    def predict_proba(self, X):
+        return self.model.predict_proba(X)
+    
+    def base_size(self):
+        # check_is_fitted(self.model.coef_)
+        hasattr(self.model, 'coef_')
+        n_features = self.model.coef_.shape[1]
+        return n_features
+    
+    def mask_model(self, top_k=None, alpha=None):
+        """
+        Mask model filters coefficients by norm (top_k or by alpha)
+        and returns the coef matrix and model.
+
+        It does not update the underlying model object
+        """
+        if top_k is None and alpha is None:
+            return self.model, self.model.coef_, self.model.intercept_
+        
+        model = deepcopy(self.model)
+        new_coef = model.coef_.copy()
+        
+        coef_norm = np.linalg.norm(new_coef, ord=2, axis=0)
+        #coef_sort = np.argsort(coef_norm)[::-1]
+        if top_k is not None:
+            coef_filter = np.argsort(coef_norm)[-top_k:][::-1]
+        elif alpha is not None:
+            coef_filter = coef_norm >= alpha
+        else:
+            raise Exception("Could not get new model with top_k: {}, alpha: {}".format(top_k, alpha))
+        new_coef = new_coef[:, coef_filter]
+        model.coef_ = new_coef
+        new_intercept = model.intercept_.copy() # intercepts are class-wise
+        return model, new_coef, new_intercept
+    
+    def graft_coef(self, max_features=None):
+        n_features = self.base_size()
+        if max_features is None or max_features == n_features:
+            return self
+        
+        if max_features < n_features:
+            raise Exception("Grafting size is less dimensions than previously fitted!")
+        
+        n_classes = self.model.coef_.shape[0]
+        new_coef = np.zeros(shape=(n_classes, max_features))
+        new_coef[:, :n_features] = self.model.coef_
+        self.model.coef_ = new_coef.copy()
+
+        # new_intercept = self.model.intercept_ # need checking?
+        # self.model.intercept_ = new_intercept.copy()
+        return self
+
+    def partial_fit(self, X, y):
+        n_features = X.shape[1]
+        self.graft_coef(n_features)
+        self.model.partial_fit(X, y)
+        return self
+
+
+
+
+
