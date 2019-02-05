@@ -23,7 +23,7 @@ In many systems the complexity of the algorithms are often limited - this could
 be due to the languages or libraries which are used, the latency or complexity
 requirements which are in place, or other contraints. 
 
-In this package, we aim to provide a _minimal_ set of tools to enable
+In this package, we aim to provide a *minimal* set of tools to enable
 machine learning deployment across wide variety of contexts. Whereas packages like
 sklearn-porter_ aim to support the final classifier, we aim to provide opinionated
 feature engineering tools to support more complex workflows.
