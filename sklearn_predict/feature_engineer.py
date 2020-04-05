@@ -22,7 +22,6 @@ class OneHotEncoderSQL:
 
     ```
     from sklearn.preprocessing import OneHotEncoder
-    
     enc = OneHotEncoder(handle_unknown='ignore')
     X = [['Male', 1], ['Female', 3], ['Female', 2]]
     enc.fit(X)
@@ -31,21 +30,16 @@ class OneHotEncoderSQL:
     #print(export.export())
     ```
     """
-    def __init__(self, model, column_names, feature_names=None):
+    def __init__(self, model, column_names, feature_names=None, ignore_values=[""]):
         self.model = model
         self.column_names = column_names
-        self.feature_names = (
-            feature_names
-            if feature_names is not None
-            else self.get_feature_names(model, column_names)
-        )
-
+        self.ignore_values = ignore_values
+        self.feature_names = feature_names if feature_names is not None else self.get_feature_names(model, column_names)
+    
     def get_feature_names(self, model, column_names):
         feature_names = []
         for col_names, fnames in zip(column_names, model.categories_):
-            feature_names.extend(
-                ["{}_{}".format(col_names, x) for x in fnames.tolist()]
-            )
+            feature_names.extend(["{}_{}".format(col_names, x) for x in fnames.tolist()])
         return feature_names
 
     def export(self):
@@ -56,11 +50,9 @@ class OneHotEncoderSQL:
         queries = []
         for col_names, fnames in zip(self.column_names, self.model.categories_):
             for feature_name in fnames:
-                queries.append(
-                    'CASE WHEN `{col}` = "{feat}" then 1 else 0 end as `{col}_{feat}`'.format(
-                        col=col_names, feat=feature_name
-                    )
-                )
+                if feature_name in self.ignore_values:
+                    continue
+                queries.append("CASE WHEN `{col}` = \"{feat}\" then 1 else 0 end as `{col}_{feat}`".format(col=col_names, feat=feature_name))
         return queries
 
 
