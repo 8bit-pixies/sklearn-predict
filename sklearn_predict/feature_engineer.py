@@ -17,6 +17,18 @@ import warnings
 
 
 class OneHotEncodingSQL:
+    """
+    Usage:
+
+    ```
+    enc = OneHotEncoder(handle_unknown='ignore')
+    X = [['Male', 1], ['Female', 3], ['Female', 2]]
+    enc.fit(X)
+
+    export = OneHotEncodingSQL(enc, ["gender", "class"])
+    #print(export.export())
+    ```
+    """
     def __init__(self, model, column_names, feature_names=None):
         self.model = model
         self.column_names = column_names
