@@ -16,11 +16,13 @@ import numpy as np
 import warnings
 
 
-class OneHotEncodingSQL:
+class OneHotEncoderSQL:
     """
     Usage:
 
     ```
+    from sklearn.preprocessing import OneHotEncoder
+    
     enc = OneHotEncoder(handle_unknown='ignore')
     X = [['Male', 1], ['Female', 3], ['Female', 2]]
     enc.fit(X)

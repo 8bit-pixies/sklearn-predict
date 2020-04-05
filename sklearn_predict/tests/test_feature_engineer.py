@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.utils.testing import assert_array_equal
 
-from sklearn_predict.feature_engineer import OneHotEncodingSQL, SkopeRulesSQL
+from sklearn_predict.feature_engineer import OneHotEncoderSQL, SkopeRulesSQL
 from sqlalchemy import create_engine
 from sklearn.preprocessing import OneHotEncoder
 
@@ -13,11 +13,11 @@ from sklearn.datasets import make_classification
 
 
 def test_ohe():
-    enc = OneHotEncoder(handle_unknown="ignore")
+    enc = OneHotEncoderSQL(handle_unknown="ignore")
     X = [["Male", 1], ["Female", 3], ["Female", 2]]
     enc.fit(X)
 
-    export = OneHotEncodingSQL(enc, ["gender", "class"])
+    export = OneHotEncoderSQL(enc, ["gender", "class"])
     # print(export.export())
 
     engine = create_engine("sqlite://", echo=False)
