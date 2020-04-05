@@ -1,20 +1,14 @@
-.. -*- mode: rst -*-
-
 sklearn-predict - Run predictions inside the database
 =====================================================
 
-.. _scikit-learn: https://scikit-learn.org
-.. _tidypredict: https://db.rstudio.com/tidypredict/
 
 **sklearn-predict** Run predictions inside the database.
 
-It aims to transcompile scikit-learn_ models to SQL equivalents in a
-similar manner to tidypredict_.
+It aims to transcompile [scikit-learn](https://scikit-learn.org) models to SQL equivalents in a
+similar manner to [tidypredict](https://db.rstudio.com/tidypredict/).
 
 Motivation
 ==========
-
-.. _sklearn-porter: https://github.com/nok/sklearn-porter
 
 Often when we're building Machine Learning models, the challenges are around
 how can these models be built and deployed? How can we make these models smarter?
@@ -25,7 +19,7 @@ requirements which are in place, or other contraints.
 
 In this package, we aim to provide a *minimal* set of tools to enable
 machine learning deployment across wide variety of contexts. Whereas packages like
-sklearn-porter_ aim to support the final classifier, we aim to provide opinionated
+[sklearn-porter](https://github.com/nok/sklearn-porter) aim to support the final classifier, we aim to provide opinionated
 feature engineering tools to support more complex workflows.
 
 Goals
@@ -48,7 +42,14 @@ be enabled to deployed more complex machine learning workflows in spite of such 
 Testing
 =======
 
-.. code:: bash
-
+```
     pytest --capture=sys
     pytest --cov=sklearn_predict
+```
+
+To do
+=====
+
+*  Convert the required code to use SQlAlchemy ORM better (still undecided)
+*  Provide end to end examples
+
